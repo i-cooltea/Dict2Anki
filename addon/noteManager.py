@@ -78,36 +78,36 @@ def getOrCreateModelCardTemplate(modelObject, cardTemplateName):
     # cardTemplate = mw.col.models.newTemplate(cardTemplateName)
     cardTemplate = mw.col.models.new_template(cardTemplateName)
     cardTemplate['qfmt'] = '''
-<div class="van-row van-row block block-word">
-    <div role="separator" class="van-divider van-divider--hairline van-divider--content-center"
-         style="margin: 5px 0px; font-size: 0.75em;">{{ 组 }}
-    </div>
-    <div class="van-collapse block__en">
-        <div class="van-collapse-item">
-            <div class="van-cell van-cell--clickable van-collapse-item__title" role="button" tabindex="0"
-                 aria-expanded="false">
-                <div class="van-cell__title">
-                    <div class="van-row">
-                        <div class="van-col van-col--3"></div>
-                        <div class="van-col van-col--18">
-                            <div id="txt-en" class="txt-en">{{ 英 }}</div>
-                        </div>
-                    </div>
-                </div>
-                <i
-                        class="van-badge__wrapper van-icon van-icon-arrow van-cell__right-icon">
-                </i></div>
-        </div>
-    </div>
-    <div class="block__en txt-pron tappable" id="playBtn">
-        <div class="van-row" style="text-align: center;">
-            <div class="van-col van-col--4"></div>
-            <div class="van-col van-col--16" style="padding-left: 15px;"><i
-                    class="van-badge__wrapper van-icon van-icon-play-circle-o"></i> <span>{{ 音 }}</span></div>
-        </div>
-    </div>
+<div class="van-row block block-group">
+    <div class="block__txt"></div>
 </div>
 
+<div class="van-row van-row block block-word">
+  <div class="van-collapse van-hairline--top-bottom block__en">
+    <div class="van-collapse-item">
+      <div class="van-cell van-cell--clickable van-collapse-item__title" role="button" tabindex="0" aria-expanded="false">
+        <div class="van-cell__title">
+          <div id="txt-en" class="txt-en">{{英}}</div>
+        </div>
+        <i class="van-badge__wrapper van-icon van-icon-arrow van-cell__right-icon">
+        </i>
+				</div>
+      <div class="van-collapse-item__wrapper" style="height: 0px; display: none;">
+        <div class="van-collapse-item__content">
+          <div class="word-affix">-无词根信息-</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="block__en txt-pron tappable" >
+    <div class="van-row" style="text-align: center;">
+      <div class="van-col van-col--4"></div>
+      <div class="van-col van-col--16">
+        <i class="van-badge__wrapper van-icon van-icon-play-circle-o">
+				 </i><span>{{音}}</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 var Http = new XMLHttpRequest();
@@ -145,16 +145,13 @@ var appData = {
 examType: "kaoyan",
 word: {
   id: 0,
-  cardId: `{{ID}}`,
-  group: `{{组}}`,
+  cardId: ``,
+  group: ``,
   en: `{{英}}`,
   pron: "{{音}}",
-  cn: `{{译2}}` || `{{译1}}`,
+  cn: `{{译1}}` || `{{译2}}`,
   note: `{{笔记}}`,
   tags: `{{Tags}}`
-},
-config:{
-showSentenceCn: 1,
 }
 };
 
@@ -182,28 +179,17 @@ def addNoteToDeck(deckObject, modelObject, currentConfig: dict, oneQueryResult: 
     modelObject['did'] = deckObject['id']
 
     newNote = anki.notes.Note(mw.col, modelObject)
-    newNote['term'] = oneQueryResult['term']
+    newNote['英'] = oneQueryResult['term']
+    newNote['音'] = '英'.join(oneQueryResult['BrEPhonetic']) + ' 美式'.join(oneQueryResult['AmEPhonetic'])
     for configName in BASIC_OPTION + EXTRA_OPTION:
         logger.debug(f'字段:{configName}--结果:{oneQueryResult.get(configName)}')
         if oneQueryResult.get(configName):
-            # 短语例句
-            if configName in ['sentence', 'phrase'] and currentConfig[configName]:
-                newNote[f'{configName}Front'] = '\n'.join(
-                    [f'<tr><td>{e.strip()}</td></tr>' for e, _ in oneQueryResult[configName]])
-                newNote[f'{configName}Back'] = '\n'.join(
-                    [f'<tr><td>{e.strip()}<br>{c.strip()}</td></tr>' for e, c in oneQueryResult[configName]])
-            # 图片
-            elif configName == 'image':
-                newNote[configName] = f'src="{oneQueryResult[configName]}"'
             # 释义
-            elif configName == 'definition' and currentConfig[configName]:
-                newNote[configName] = ' '.join(oneQueryResult[configName])
-            # 发音
-            elif configName in EXTRA_OPTION[:2]:
-                newNote[configName] = f"[sound:{configName}_{oneQueryResult['term']}.mp3]"
+            if configName == 'definition' and currentConfig[configName]:
+                newNote['译1'] = ' '.join(oneQueryResult[configName])
             # 其他
-            elif currentConfig[configName]:
-                newNote[configName] = oneQueryResult[configName]
+            # elif currentConfig[configName]:
+            #     newNote[configName] = oneQueryResult[configName]
 
     mw.col.addNote(newNote)
     mw.col.reset()

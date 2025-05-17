@@ -14,7 +14,7 @@ try:
         w.exec()
 
 
-    action = QAction("Dict2Anki...", mw)
+    action = QAction("Dict2Anki...(By Dream)", mw)
     action.triggered.connect(showWindow)
     mw.form.menuTools.addAction(action)
 
