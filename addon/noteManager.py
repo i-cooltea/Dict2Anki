@@ -22,9 +22,9 @@ def getWordsByDeck(deckName) -> [str]:
         # note = mw.col.getNote(nid)
         note = mw.col.get_note(nid)
         # if note.model().get('name', '').lower().startswith('dict2anki') and note['term']:
-        if note.note_type().get('name', '').lower().startswith('dict2anki') and note['term']:
+        if note.note_type().get('name', '').lower().startswith('dict2anki') and note['英']:
 
-            words.append(note['term'])
+            words.append(note['英'])
     return words
 
 
@@ -78,36 +78,35 @@ def getOrCreateModelCardTemplate(modelObject, cardTemplateName):
     # cardTemplate = mw.col.models.newTemplate(cardTemplateName)
     cardTemplate = mw.col.models.new_template(cardTemplateName)
     cardTemplate['qfmt'] = '''
-<div class="van-row block block-group">
-    <div class="block__txt"></div>
+<div class="van-row van-row block block-word">
+    <div role="separator" class="van-divider van-divider--hairline van-divider--content-center"
+         style="margin: 5px 0px; font-size: 0.75em;"></div>
+    <div class="van-collapse block__en">
+        <div class="van-collapse-item">
+            <div class="van-cell van-cell--clickable van-collapse-item__title" role="button" tabindex="0"
+                 aria-expanded="false">
+                <div class="van-cell__title">
+                    <div class="van-row">
+                        <div class="van-col van-col--3"></div>
+                        <div class="van-col van-col--18">
+                            <div id="txt-en" class="txt-en">{{ 英 }}</div>
+                        </div>
+                    </div>
+                </div>
+                <i
+                        class="van-badge__wrapper van-icon van-icon-arrow van-cell__right-icon">
+                </i></div>
+        </div>
+    </div>
+    <div class="block__en txt-pron tappable" id="playBtn">
+        <div class="van-row" style="text-align: center;">
+            <div class="van-col van-col--4"></div>
+            <div class="van-col van-col--16" style="padding-left: 15px;"><i
+                    class="van-badge__wrapper van-icon van-icon-play-circle-o"></i> <span>{{ 音 }}</span></div>
+        </div>
+    </div>
 </div>
 
-<div class="van-row van-row block block-word">
-  <div class="van-collapse van-hairline--top-bottom block__en">
-    <div class="van-collapse-item">
-      <div class="van-cell van-cell--clickable van-collapse-item__title" role="button" tabindex="0" aria-expanded="false">
-        <div class="van-cell__title">
-          <div id="txt-en" class="txt-en">{{英}}</div>
-        </div>
-        <i class="van-badge__wrapper van-icon van-icon-arrow van-cell__right-icon">
-        </i>
-				</div>
-      <div class="van-collapse-item__wrapper" style="height: 0px; display: none;">
-        <div class="van-collapse-item__content">
-          <div class="word-affix">-无词根信息-</div></div>
-      </div>
-    </div>
-  </div>
-  <div class="block__en txt-pron tappable" >
-    <div class="van-row" style="text-align: center;">
-      <div class="van-col van-col--4"></div>
-      <div class="van-col van-col--16">
-        <i class="van-badge__wrapper van-icon van-icon-play-circle-o">
-				 </i><span>{{音}}</span>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 var Http = new XMLHttpRequest();
@@ -180,17 +179,14 @@ def addNoteToDeck(deckObject, modelObject, currentConfig: dict, oneQueryResult: 
 
     newNote = anki.notes.Note(mw.col, modelObject)
     newNote['英'] = oneQueryResult['term']
-    newNote['音'] = '英'.join(oneQueryResult['BrEPhonetic']) + ' 美式'.join(oneQueryResult['AmEPhonetic'])
+    newNote['音'] = oneQueryResult['BrEPhonetic'] or oneQueryResult['AmEPhonetic'] or '暂无'
     for configName in BASIC_OPTION + EXTRA_OPTION:
         logger.debug(f'字段:{configName}--结果:{oneQueryResult.get(configName)}')
         if oneQueryResult.get(configName):
             # 释义
             if configName == 'definition' and currentConfig[configName]:
                 newNote['译1'] = ' '.join(oneQueryResult[configName])
-            # 其他
-            # elif currentConfig[configName]:
-            #     newNote[configName] = oneQueryResult[configName]
 
     mw.col.addNote(newNote)
     mw.col.reset()
-    logger.info(f"添加笔记{newNote['term']}")
+    logger.info(f"添加笔记{oneQueryResult['term']}")
